@@ -1,0 +1,42 @@
+name: ESP32-C3 Auto Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Manual trigger dari UI
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup PlatformIO
+      uses: platformio/setup-platformio@v2
+      
+    - name: Build project
+      run: |
+        # Cek struktur file
+        ls -la
+        
+        # Buat platformio.ini jika belum ada
+        if [ ! -f platformio.ini ]; then
+          echo "[env:esp32-c3-devkitm-1]" > platformio.ini
+          echo "platform = espressif32" >> platformio.ini
+          echo "board = esp32-c3-devkitm-1" >> platformio.ini
+          echo "framework = arduino" >> platformio.ini
+        fi
+        
+        # Build
+        pio run -e esp32-c3-devkitm-1
+        
+    - name: Upload firmware
+      uses: actions/upload-artifact@v3
+      with:
+        name: firmware-bin
+        path: .pio/build/esp32-c3-devkitm-1/*.bin
+        retention-days: 7
